@@ -1,0 +1,17 @@
+# Node
+node_modules/
+dist/
+dist_electron/
+dist-build/
+out/
+build/
+.DS_Store
+
+# Log files
+*.log
+
+# Electron builder output
+*.exe
+*.dmg
+*.app
+*.asar

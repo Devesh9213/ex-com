@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pixsedit Employee Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    button { padding: 5px 10px; margin: 5px; }
+    .form-group { margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Employee Tracker</h1>
+  
+  <div id="loginSection">
+    <h2>Login</h2>
+    <input id="username" type="text" placeholder="Username" value="admin">
+    <input id="password" type="password" placeholder="Password" value="admin123">
+    <button onclick="login()">Login</button>
+    <p id="loginStatus"></p>
+  </div>
+
+  <div id="employeeSection" style="display:none;">
+    <h2>Employees</h2>
+    <table id="employeeTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Position</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h3>Add New Employee</h3>
+    <div class="form-group">
+      <input id="empName" type="text" placeholder="Name">
+    </div>
+    <div class="form-group">
+      <input id="empPosition" type="text" placeholder="Position">
+    </div>
+    <button onclick="addEmployee()">Add Employee</button>
+  </div>
+
+  <script>
+    let currentUser = null
+
+    async function login() {
+      const username = document.getElementById('username').value
+      const password = document.getElementById('password').value
+      
+      const result = await window.api.login({ username, password })
+      
+      if (result.success) {
+        currentUser = result.user
+        document.getElementById('loginStatus').textContent = "Logged in as " + username
+        document.getElementById('loginSection').style.display = 'none'
+        document.getElementById('employeeSection').style.display = 'block'
+        loadEmployees()
+      } else {
+        document.getElementById('loginStatus').textContent = "Error: " + result.error
+      }
+    }
+
+    async function loadEmployees() {
+      const employees = await window.api.getEmployees()
+      const tbody = document.querySelector('#employeeTable tbody')
+      tbody.innerHTML = employees.map(emp => `
+        <tr>
+          <td>${emp.name}</td>
+          <td>${emp.position}</td>
+          <td>
+            <button onclick="deleteEmployee(${emp.id})">Delete</button>
+          </td>
+        </tr>
+      `).join('')
+    }
+
+    async function addEmployee() {
+      const name = document.getElementById('empName').value
+      const position = document.getElementById('empPosition').value
+      
+      const result = await window.api.addEmployee({ name, position })
+      if (result.success) {
+        document.getElementById('empName').value = ''
+        document.getElementById('empPosition').value = ''
+        loadEmployees()
+      }
+    }
+
+    async function deleteEmployee(id) {
+      const result = await window.api.deleteEmployee(id)
+      if (result.success) loadEmployees()
+    }
+  
+  </script>
+</body>
+</html>
