@@ -1,0 +1,12 @@
+appId: "com.yourcompany.employeetracker"
+productName: "Employee Tracker"
+directories:
+  output: "dist-build"
+files:
+  - "electron.js"
+  - "package.json"
+  - "frontend/dist/**"
+  - "backend/**"
+win:
+  target: "nsis"
+  icon: "assets/icon.ico"

@@ -1,36 +1,41 @@
-name: Build and Upload Artifact
+name: Build Electron App (Windows)
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   build:
-    runs-on: windows-latest  # or ubuntu-latest, macos-latest
-
-    permissions:
-      contents: read
-      actions: read
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  # Updated to v4
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4  # Updated to v4
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      - name: Build project
-        run: |
-          npm install
-          npm run build
+      - name: Install root dependencies
+        run: npm install
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4  # Updated to v4
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Build frontend (Vite)
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Build Electron app (Windows)
+        run: npm run build:win
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: build-output
-          path: dist/  # Replace with your actual output folder
-          retention-days: 3
+          name: EmployeeTracker-Windows
+          path: dist-build/
