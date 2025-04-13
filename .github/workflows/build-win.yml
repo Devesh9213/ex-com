@@ -27,6 +27,10 @@ jobs:
           npm install
           npm install --save-exact @journeyapps/sqlcipher@5.3.1
 
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm install
+
       - name: Rebuild native modules
         run: |
           npm rebuild sqlite3 --runtime=electron --target=28.1.0 --disturl=https://electronjs.org/headers --abi=116
@@ -36,7 +40,7 @@ jobs:
         run: npm run build
 
       - name: Build Windows installer
-        run: npm run build:win
+        run: npm run build:win --publish=never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
