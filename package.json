@@ -3,19 +3,19 @@
   "version": "1.0.0",
   "main": "electron.js",
   "scripts": {
-    "start": "concurrently -k \"npm run backend\" \"npm run frontend\" \"wait-on http://localhost:5173 && npm run electron\"",
+    "start": "concurrently -k \"npm run backend\" \"npm run frontend\" \"npm run electron\"",
     "backend": "node backend/server.js",
     "frontend": "cd frontend && npm run dev",
     "electron": "electron .",
-    "build": "npm run rebuild-native && cd frontend && npm run build",
-    "rebuild-native": "npm rebuild sqlite3 @journeyapps/sqlcipher --runtime=electron --target=28.1.0 --disturl=https://electronjs.org/headers --abi=116",
-    "build:win": "npm run build && electron-builder --win --x64 --publish never",
-    "postinstall": "electron-builder install-app-deps && cd frontend && npm install"
+    "build": "cd frontend && npm run build",
+    "dist": "npm run build && electron-builder",
+    "build:win": "npm run build && electron-builder --win --x64 --publish=never",
+    "build:mac": "npm run build && electron-builder --mac --publish=never",
+    "postinstall": "cd frontend && npm install"
   },
   "build": {
     "appId": "com.pixsedit.employeetracker",
     "productName": "Employee Tracker",
-    "copyright": "Copyright © 2024",
     "files": [
       "electron.js",
       "package.json",
@@ -26,27 +26,32 @@
       {
         "from": "backend",
         "to": "backend"
-      },
-      {
-        "from": "node_modules/sqlite3/lib/binding/electron-v28.1-win32-x64",
-        "to": "node_modules/sqlite3/lib/binding"
-      },
-      {
-        "from": "node_modules/@journeyapps/sqlcipher/lib/binding/electron-v28.1-win32-x64",
-        "to": "node_modules/@journeyapps/sqlcipher/lib/binding"
       }
     ],
+    "generateUpdatesFilesForAllChannels": false,
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns", 
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
     "win": {
       "target": "nsis",
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico", 
+      "signingHashAlgorithms": ["sha256"],
+      "certificateFile": "",
+      "certificatePassword": ""
     },
     "directories": {
       "output": "dist-build",
-      "buildResources": "build"
+      "buildResources": "build" 
+    },
+    "extraMetadata": {
+      "author": "Your Name <your.email@example.com>",
+      "description": "Employee Management Application"
     }
   },
   "dependencies": {
-    "@journeyapps/sqlcipher": "5.3.1",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
@@ -55,14 +60,15 @@
     "jsonwebtoken": "^9.0.2",
     "path": "^0.12.7",
     "sequelize": "^6.37.7",
-    "sqlite3": "5.1.7"
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.3",
     "concurrently": "^9.1.2",
-    "electron": "28.1.0",
+    "electron": "^28.3.3",
     "electron-builder": "^24.13.3",
-    "vite": "^6.2.6",
-    "wait-on": "^8.0.3"
+    "vite": "^6.2.5",
+    "wait-on": "^8.0.3",
+    "electron-rebuild": "^3.2.9"
   }
 }
