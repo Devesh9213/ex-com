@@ -7,17 +7,15 @@
     "backend": "node backend/server.js",
     "frontend": "cd frontend && npm run dev",
     "electron": "electron .",
-    "build": "npm run rebuild-sqlite && cd frontend && npm run build",
-    "dist": "npm run build && electron-builder",
+    "build": "npm run rebuild-native && cd frontend && npm run build",
+    "rebuild-native": "npm rebuild sqlite3 @journeyapps/sqlcipher --runtime=electron --target=28.1.0 --disturl=https://electronjs.org/headers --abi=116",
     "build:win": "npm run build && electron-builder --win --x64 --publish never",
-    "build:mac": "npm run build && electron-builder --mac --publish never",
-    "rebuild-sqlite": "npm rebuild sqlite3 --runtime=electron --target=28.1.0 --disturl=https://electronjs.org/headers --abi=116",
     "postinstall": "electron-builder install-app-deps && cd frontend && npm install"
   },
   "build": {
     "appId": "com.pixsedit.employeetracker",
     "productName": "Employee Tracker",
-    "copyright": "Copyright © 2024 PixsEdit",
+    "copyright": "Copyright © 2024",
     "files": [
       "electron.js",
       "package.json",
@@ -30,31 +28,25 @@
         "to": "backend"
       },
       {
-        "from": "node_modules/sqlite3/lib/binding/napi-v6-win32-x64",
-        "to": "node_modules/sqlite3/lib/binding/napi-v6-win32-x64"
+        "from": "node_modules/sqlite3/lib/binding/electron-v28.1-win32-x64",
+        "to": "node_modules/sqlite3/lib/binding"
+      },
+      {
+        "from": "node_modules/@journeyapps/sqlcipher/lib/binding/electron-v28.1-win32-x64",
+        "to": "node_modules/@journeyapps/sqlcipher/lib/binding"
       }
     ],
-    "mac": {
-      "target": "dmg",
-      "icon": "build/icon.icns",
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false
-    },
     "win": {
       "target": "nsis",
-      "icon": "build/icon.ico",
-      "requestedExecutionLevel": "requireAdministrator"
+      "icon": "build/icon.ico"
     },
     "directories": {
       "output": "dist-build",
       "buildResources": "build"
-    },
-    "extraMetadata": {
-      "description": "Employee management application",
-      "author": "Your Name <your.email@example.com>"
     }
   },
   "dependencies": {
+    "@journeyapps/sqlcipher": "5.3.1",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
@@ -71,7 +63,6 @@
     "electron": "28.1.0",
     "electron-builder": "^24.13.3",
     "vite": "^6.2.6",
-    "wait-on": "^8.0.3",
-    "@electron/notarize": "^2.2.1"
+    "wait-on": "^8.0.3"
   }
 }
