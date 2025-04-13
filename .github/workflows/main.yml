@@ -28,8 +28,8 @@ jobs:
       - name: Package Windows .exe
         run: npm run build:win
 
-      - name: Upload Artifacts (Installer)
-        uses: actions/upload-artifact@v3
-        with:
+      - - name: Upload Artifacts (Installer)
+          uses: actions/upload-artifact@v2
+          with:
           name: employee-tracker-windows-installer
           path: dist-build/*.exe
