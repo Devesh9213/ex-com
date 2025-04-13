@@ -47,7 +47,7 @@
     },
     "directories": {
       "output": "dist-build",
-      "buildResources": "build" 
+      "buildResources": "build"
     },
     "extraMetadata": {
       "author": "Your Name <your.email@example.com>",
@@ -70,9 +70,13 @@
     "concurrently": "^9.1.2",
     "electron": "^28.3.3",
     "electron-builder": "^24.13.3",
-    "vite": "^6.2.5",
-    "wait-on": "^8.0.3",
     "electron-rebuild": "^3.2.9",
-    "express": "^4.18.2"
+    "eslint": "^9.24.0",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-react": "^7.37.5",
+    "express": "^4.18.2",
+    "prettier": "^3.5.3",
+    "vite": "^6.2.5",
+    "wait-on": "^8.0.3"
   }
 }

@@ -1,17 +1,14 @@
-# Node
+# Dependency directories
 node_modules/
-dist/
-dist_electron/
-dist-build/
-out/
+
+# Environment files
+.env
+.env.local
+
+# Build files
 build/
-.DS_Store
+dist/
 
-# Log files
-*.log
-
-# Electron builder output
-*.exe
-*.dmg
-*.app
-*.asar
+# IDE files
+.vscode/
+.idea/
