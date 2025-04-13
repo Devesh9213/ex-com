@@ -1,14 +1,14 @@
-name: Build Electron App (Windows)
+name: Build Electron App (Multi-Platform)
 
 on:
   push:
     branches: [ main ]
 
 env:
-  GH_TOKEN: ${ secrets.GH_TOKEN }  # Properly references the secret
+  GH_TOKEN: ${ secrets.GH_TOKEN }
 
 jobs:
-  build:
+  windows-build:
     runs-on: windows-latest
 
     steps:
@@ -31,10 +31,41 @@ jobs:
         run: npm run build
 
       - name: Build Windows installer
-        run: npm run build:win -- --publish never  # Skip publishing if not needed
+        run: npm run build:win -- --publish never
 
-      - name: Upload artifact
+      - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: EmployeeTracker-Windows
-          path: dist-build/
+          path: dist-build/*.exe
+
+  macos-build:
+    runs-on: macos-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Rebuild native modules
+        run: |
+          npm rebuild --runtime=electron --target=28.3.3 --disturl=https://electronjs.org/headers --abi=116
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build macOS DMG
+        run: npm run build:mac -- --publish never
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EmployeeTracker-macOS
+          path: dist-build/*.dmg
