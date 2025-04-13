@@ -1,11 +1,8 @@
-name: Build Electron App (Multi-Platform)
+name: Build Electron App
 
 on:
   push:
     branches: [ main ]
-
-env:
-  GH_TOKEN: ${ secrets.GH_TOKEN }
 
 jobs:
   windows-build:
@@ -20,58 +17,31 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Install Python (for SQLite build)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install
+          npm install --save-exact @journeyapps/sqlcipher@5.3.1
 
       - name: Rebuild native modules
         run: |
-          npm rebuild --runtime=electron --target=28.3.3 --disturl=https://electronjs.org/headers --abi=116
+          npm rebuild sqlite3 --runtime=electron --target=28.1.0 --disturl=https://electronjs.org/headers --abi=116
+          npm rebuild @journeyapps/sqlcipher --runtime=electron --target=28.1.0 --disturl=https://electronjs.org/headers --abi=116
 
       - name: Build frontend
         run: npm run build
 
       - name: Build Windows installer
-        run: npm run build:win -- --publish never
+        run: npm run build:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Windows artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: EmployeeTracker-Windows
           path: dist-build/*.exe
-
-  macos-build:
-    runs-on: macos-latest
-    
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Rebuild native modules (macOS)
-        run: |
-          export npm_config_build_from_source=true
-          npm rebuild --runtime=electron --target=28.3.3 --disturl=https://electronjs.org/headers --abi=116
-
-      - name: Build frontend
-        run: npm run build
-
-      - name: Build macOS DMG
-        run: npm run build:mac -- --publish never
-
-      - name: Upload macOS artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: EmployeeTracker-macOS
-          path: dist-build/*.dmg
