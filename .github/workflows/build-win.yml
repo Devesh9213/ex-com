@@ -1,35 +1,44 @@
-name: Build Windows .exe
+name: Build and Upload Artifact
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build:
+    runs-on: ubuntu-latest  # or windows-latest, macos-latest
+
+    permissions:
+      contents: read
+      actions: read
 
     steps:
+      # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Setup Node.js (example - customize as needed)
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: '18'
 
-      - name: Install dependencies
-        run: npm install
+      # Example build step (replace with your actual build commands)
+      - name: Build project
+        run: |
+          npm install
+          npm run build
 
-      - name: Build frontend
-        run: npm run build
-
-      - name: Package Windows app
-        run: npm run build:win
-
-      - name: Upload Windows .exe
-        uses: actions/upload-artifact@v2
+      # Upload build artifacts
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
         with:
-          name: employee-tracker-windows-installer
-          path: dist-build/*.exe
+          name: build-artifacts
+          path: |
+            dist/
+            build/
+            *.log
+          if-no-files-found: warn  # Options: error, warn, ignore
+          retention-days: 5  # Optional: auto-delete after X days
