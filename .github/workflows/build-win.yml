@@ -8,37 +8,29 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # or windows-latest, macos-latest
+    runs-on: windows-latest  # or ubuntu-latest, macos-latest
 
     permissions:
       contents: read
       actions: read
 
     steps:
-      # Checkout repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # Updated to v4
 
-      # Setup Node.js (example - customize as needed)
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4  # Updated to v4
         with:
-          node-version: '18'
+          node-version: '20'
 
-      # Example build step (replace with your actual build commands)
       - name: Build project
         run: |
           npm install
           npm run build
 
-      # Upload build artifacts
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4  # Updated to v4
         with:
-          name: build-artifacts
-          path: |
-            dist/
-            build/
-            *.log
-          if-no-files-found: warn  # Options: error, warn, ignore
-          retention-days: 5  # Optional: auto-delete after X days
+          name: build-output
+          path: dist/  # Replace with your actual output folder
+          retention-days: 3
