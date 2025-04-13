@@ -30,17 +30,10 @@
     ],
     "generateUpdatesFilesForAllChannels": false,
     "mac": {
-      "target": "dmg",
-      "icon": "build/icon.icns", 
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false
+      "target": "dmg"
     },
     "win": {
-      "target": "nsis",
-      "icon": "build/icon.ico", 
-      "signingHashAlgorithms": ["sha256"],
-      "certificateFile": "",
-      "certificatePassword": ""
+      "target": "nsis"
     },
     "directories": {
       "output": "dist-build",
