@@ -3,16 +3,16 @@ name: Build Electron App (Windows)
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+
+env:
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}  # Critical for electron-builder
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -20,18 +20,17 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install root dependencies
+      - name: Install dependencies
         run: npm install
 
-      - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm install
+      - name: Rebuild SQLite3 for Electron
+        run: |
+          npm rebuild --runtime=electron --target=28.3.3 --disturl=https://electronjs.org/headers --abi=116
 
-      - name: Build frontend (Vite)
-        working-directory: ./frontend
+      - name: Build frontend
         run: npm run build
 
-      - name: Build Electron app (Windows)
+      - name: Build Windows installer
         run: npm run build:win
 
       - name: Upload artifact
