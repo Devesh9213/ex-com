@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 env:
-  GH_TOKEN: ${{ secrets.GH_TOKEN }}  # Critical for electron-builder
+  GH_TOKEN: ${ secrets.GH_TOKEN }  # Properly references the secret
 
 jobs:
   build:
@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Rebuild SQLite3 for Electron
+      - name: Rebuild native modules
         run: |
           npm rebuild --runtime=electron --target=28.3.3 --disturl=https://electronjs.org/headers --abi=116
 
@@ -31,7 +31,7 @@ jobs:
         run: npm run build
 
       - name: Build Windows installer
-        run: npm run build:win
+        run: npm run build:win -- --publish never  # Skip publishing if not needed
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
