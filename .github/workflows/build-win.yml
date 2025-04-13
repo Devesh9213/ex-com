@@ -11,7 +11,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Setup Node.js
@@ -22,13 +22,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build Frontend
+      - name: Build frontend
         run: npm run build
 
-      - name: Package Windows .exe
+      - name: Package Windows app
         run: npm run build:win
 
-      - name: Upload Artifacts (Installer)
+      - name: Upload Windows .exe
         uses: actions/upload-artifact@v2
         with:
           name: employee-tracker-windows-installer
