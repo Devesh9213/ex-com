@@ -1,96 +1,53 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
-const http = require('http');
 
-// GPU Process Error Prevention
-app.commandLine.appendSwitch('disable-gpu');
-app.commandLine.appendSwitch('disable-gpu-compositing');
-app.commandLine.appendSwitch('disable-software-rasterizer');
+// Configuration
+const isDevelopment = process.env.NODE_ENV === 'development';
+let mainWindow = null;
+let backendProcess = null;
 
-let mainWindow;
-let backendProcess;
-
-function startBackendServer() {
-  const isPackaged = app.isPackaged;
-  const serverPath = isPackaged
+// 1. Backend Process Management
+function startBackend() {
+  const backendPath = app.isPackaged
     ? path.join(process.resourcesPath, 'backend', 'server.js')
     : path.join(__dirname, 'backend', 'server.js');
 
-  if (!fs.existsSync(serverPath)) {
-    console.error('Backend server.js not found at:', serverPath);
+  if (!fs.existsSync(backendPath)) {
+    dialog.showErrorBox('Error', 'Backend server not found at: ' + backendPath);
+    app.quit();
     return null;
   }
 
-  const backend = spawn('node', [serverPath], {
-    stdio: 'inherit',
-    shell: true,
-    env: {
-      ...process.env,
-      ELECTRON_RUN_AS_NODE: '1'
-    }
+  const processEnv = {
+    ...process.env,
+    ELECTRON_RUN_AS_NODE: '1',
+    NODE_ENV: process.env.NODE_ENV || 'production'
+  };
+
+  const backend = spawn(process.execPath, [backendPath], {
+    env: processEnv,
+    stdio: ['pipe', 'pipe', 'pipe', 'ipc']
   });
 
-  backend.on('error', (err) => {
-    console.error('Failed to start backend:', err);
-  });
+  backend.stdout.on('data', (data) => console.log(`[Backend] ${data}`));
+  backend.stderr.on('data', (data) => console.error(`[Backend Error] ${data}`));
 
-  backend.on('exit', (code) => {
+  backend.on('close', (code) => {
     console.log(`Backend process exited with code ${code}`);
-    if (code !== 0 && !backendProcess.killed) {
-      console.log('Restarting backend...');
-      backendProcess = startBackendServer();
+    if (code !== 0) {
+      dialog.showErrorBox('Error', `Backend crashed with code ${code}`);
+      app.quit();
     }
   });
 
   return backend;
 }
 
-async function waitForBackend(retries = 10, delay = 500) {
-  return new Promise((resolve, reject) => {
-    const tryConnect = (attempt = 1) => {
-      const request = http.get('http://localhost:3001', (res) => {
-        if (res.statusCode < 500) {
-          console.log(`Backend connected after ${attempt} attempts`);
-          request.destroy();
-          resolve();
-        } else {
-          request.destroy();
-          retry(attempt);
-        }
-      }).on('error', () => retry(attempt));
-    };
-
-    const retry = (attempt) => {
-      if (attempt >= retries) {
-        reject(new Error(`Backend not responding after ${retries} attempts`));
-        return;
-      }
-      setTimeout(() => tryConnect(attempt + 1), delay);
-    };
-
-    tryConnect();
-  });
-}
-
-async function createWindow() {
-  try {
-    backendProcess = startBackendServer();
-    if (!backendProcess) {
-      throw new Error('Failed to initialize backend process');
-    }
-
-    await waitForBackend();
-    console.log('✅ Backend is ready');
-  } catch (err) {
-    console.error('❌ Backend initialization failed:', err);
-    if (backendProcess) backendProcess.kill();
-    app.quit();
-    return;
-  }
-
-  mainWindow = new BrowserWindow({
+// 2. Main Window Creation
+function createMainWindow() {
+  const window = new BrowserWindow({
     width: 1200,
     height: 800,
     show: false,
@@ -99,62 +56,59 @@ async function createWindow() {
       contextIsolation: true,
       sandbox: true,
       webSecurity: true,
-      allowRunningInsecureContent: false
-    },
-    backgroundColor: '#1e1e1e'
+      preload: path.join(__dirname, 'preload.js')
+    }
   });
 
-  const indexPath = app.isPackaged
-    ? path.join(__dirname, 'frontend', 'dist', 'index.html')
-    : 'http://localhost:5173';
-
-  try {
-    if (app.isPackaged) {
-      await mainWindow.loadFile(indexPath);
-    } else {
-      await mainWindow.loadURL(indexPath);
-    }
-  } catch (err) {
-    console.error('Failed to load window content:', err);
-    app.quit();
-    return;
+  // Load frontend
+  if (isDevelopment) {
+    window.loadURL('http://localhost:5173');
+    window.webContents.openDevTools();
+  } else {
+    window.loadFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
   }
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
-    // Optional: Open dev tools in development
-    if (!app.isPackaged) {
-      mainWindow.webContents.openDevTools({ mode: 'detach' });
-    }
-  });
-
-  mainWindow.on('closed', () => {
+  window.on('closed', () => {
     mainWindow = null;
   });
+
+  window.once('ready-to-show', () => {
+    window.show();
+  });
+
+  return window;
 }
 
+// 3. App Lifecycle Management
+app.whenReady().then(() => {
+  try {
+    backendProcess = startBackend();
+    if (!backendProcess) return;
+
+    mainWindow = createMainWindow();
+  } catch (error) {
+    dialog.showErrorBox('Startup Error', error.message);
+    app.quit();
+  }
+});
+
 app.on('window-all-closed', () => {
-  if (backendProcess) backendProcess.kill();
-  if (process.platform !== 'darwin') app.quit();
+  if (process.platform !== 'darwin') {
+    if (backendProcess) backendProcess.kill();
+    app.quit();
+  }
 });
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  if (mainWindow === null) {
+    mainWindow = createMainWindow();
+  }
 });
 
-app.on('will-quit', () => {
-  if (backendProcess) backendProcess.kill();
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
+// 4. Error Handling
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  dialog.showErrorBox('Error', `Uncaught Exception: ${error.message}`);
   if (backendProcess) backendProcess.kill();
   app.quit();
-});
-
-// Initialize the app
-app.whenReady().then(createWindow).catch((err) => {
-  console.error('App initialization failed:', err);
-  process.exit(1);
 });

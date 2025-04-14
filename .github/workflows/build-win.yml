@@ -17,34 +17,30 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install Python (for SQLite build)
+      - name: Install Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
-          npm install
-          npm install --save-exact @journeyapps/sqlcipher@5.3.1
+          npm ci
+          npm install --save-exact sqlite3@5.1.8
 
-      - name: Install backend dependencies
-        working-directory: ./backend
-        run: npm install
-
-      - name: Rebuild native modules
+      - name: Rebuild Native Modules
         run: |
-          npm rebuild sqlite3 --runtime=electron --target=28.1.0 --disturl=https://electronjs.org/headers --abi=116
-          npm rebuild @journeyapps/sqlcipher --runtime=electron --target=28.1.0 --disturl=https://electronjs.org/headers --abi=116
+          npm rebuild sqlite3 --runtime=electron --target=29.0.0 --disturl=https://electronjs.org/headers
 
-      - name: Build frontend
+      - name: Build Frontend
         run: npm run build
 
-      - name: Build Windows installer
-        run: npm run build:win --publish=never
+      - name: Build Windows Installer
+        run: npm run build:win
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CI: false
+          ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
 
-      - name: Upload artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: EmployeeTracker-Windows

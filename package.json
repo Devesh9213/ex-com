@@ -11,10 +11,11 @@
     "dist": "npm run build && electron-builder",
     "build:win": "npm run build && electron-builder --win --x64 --publish=never",
     "build:mac": "npm run build && electron-builder --mac --publish=never",
-    "postinstall": "cd frontend && npm install"
+    "postinstall": "electron-builder install-app-deps && cd frontend && npm install",
+    "prune": "npm prune --production"
   },
   "build": {
-    "appId": "com.pixsedit.employeetracker",
+    "appId": "com.yourcompany.employeetracker",
     "productName": "Employee Tracker",
     "files": [
       "electron.js",
@@ -26,32 +27,26 @@
       {
         "from": "backend",
         "to": "backend"
+      },
+      {
+        "from": "build/icon.ico",
+        "to": "build"
       }
     ],
-    "generateUpdatesFilesForAllChannels": false,
-    "mac": {
-      "target": "dmg"
-    },
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": "x64"
-        },
-        {
-          "target": "portable",
-          "arch": "x64"
-        }
-      ],
+      "target": ["nsis", "portable"],
       "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns"
     },
     "directories": {
       "output": "dist-build",
       "buildResources": "build"
     },
     "extraMetadata": {
-      "author": "Your Name <your.email@example.com>",
-      "description": "Employee Management Application"
+      "main": "electron.js"
     }
   },
   "dependencies": {
@@ -63,18 +58,16 @@
     "jsonwebtoken": "^9.0.2",
     "path": "^0.12.7",
     "sequelize": "^6.37.7",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.8"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.3",
     "concurrently": "^9.1.2",
-    "electron": "^28.3.3",
-    "electron-builder": "^24.13.3",
-    "electron-rebuild": "^3.2.9",
+    "electron": "^29.0.0",
+    "electron-builder": "^24.14.0",
     "eslint": "^9.24.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-react": "^7.37.5",
-    "express": "^4.18.2",
     "prettier": "^3.5.3",
     "vite": "^6.2.5",
     "wait-on": "^8.0.3"
